@@ -288,3 +288,37 @@ $ docker-compose ps
 
 -> not found
 ```
+
+## 4. Create MVC on Rails App
+Create User MVC on Rails App.
+
+```bash
+$ docker-compose run --rm back rails g scaffold user name:string
+$ docker-compose run --rm back rails db:migrate
+
+# check Rails routes
+$ docker-compose run --rm back rails routes
+
+Prefix Verb   URI Pattern            Controller#Action
+users  GET    /users(.:format)       users#index
+       POST   /users(.:format)       users#create
+user   GET    /users/:id(.:format)   users#show
+       PATCH  /users/:id(.:format)   users#update
+       PUT    /users/:id(.:format)   users#update
+       DELETE /users/:id(.:format)   users#destroy
+```
+
+### Create test user
+
+```bash
+# Containers run in the background.
+$ docker-compose up -d back
+$ curl -X POST http://localhost:3000/users -d 'user[name]=test'
+$ curl http://localhost:3000/users/1
+
+curl http://localhost:3000/users/1
+{"id":1,"name":"test","created_at":"2021-xx-xxTxx:xx:xx.xxxx","updated_at":"2021-xx-xxTxx:xx:xx.xxxx"}
+
+$ docker-compose down
+$ docker-compose ps
+```
