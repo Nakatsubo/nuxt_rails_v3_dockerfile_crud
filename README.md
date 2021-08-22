@@ -289,7 +289,7 @@ $ docker-compose ps
 -> not found
 ```
 
-## 4. Create MVC on Rails App
+## 5. Create MVC on Rails App
 Create User MVC on Rails App.
 
 ```bash
@@ -322,3 +322,178 @@ curl http://localhost:3000/users/1
 $ docker-compose down
 $ docker-compose ps
 ```
+
+## 6. Rails API x Nuxt.js
+
+### 6-1. Set Environment variable
+
+### back/Dockerfile
+
+```dockerfile
+FROM node:16.7.0-alpine
+
+ARG WORKDIR
+ARG CONTAINER_PORT
+# add
+ARG API_URL
+
+ENV HOME=/${WORKDIR} \
+    LANG=C.UTF-8 \
+    TZ=Asia/Tokyo \
+    # add
+    HOST=0.0.0.0 \
+    # add
+    API_URL=${API_URL}
+
+# ENV check
+RUN echo ${HOME}
+RUN echo ${CONTAINER_PORT}
+# 追加
+RUN echo ${API_URL}
+
+WORKDIR ${HOME}
+
+EXPOSE ${CONTAINER_PORT}
+```
+
+### docker-compose.yml
+
+```yml
+  back:
+    build:
+      context: ./back
+      args:
+        WORKDIR: $WORKDIR
+    environment:
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      API_DOMAIN: "localhost:$FRONT_PORT"
+    volumes:
+      - ./back:/$WORKDIR
+    depends_on:
+      - db
+    ports:
+      - "$API_PORT:$CONTAINER_PORT"
+
+   ...
+
+  front:
+    build:
+      context: ./front
+      args:
+        WORKDIR: $WORKDIR
+        CONTAINER_PORT: $CONTAINER_PORT
+        API_URL: "http://localhost:$API_PORT"
+    command: yarn run dev
+    volumes:
+      - ./front:/$WORKDIR
+    ports:
+      - "$FRONT_PORT:$CONTAINER_PORT"
+    depends_on:
+      - back
+```
+
+### 6-2. Set axios on Nuxt.js
+
+```bash
+# install axios
+$ docker-compose run --rm front yarn add @nuxtjs/axios
+$ mkdir front/plugins
+$ vi front/plugins/axios.js
+```
+
+### front/plugins/axios.js
+
+```javascript
+export default ({ $axios }) => {
+  // Request log
+  $axios.onRequest((config) => {
+    console.log(config)
+  })
+  // Response log
+  $axios.onResponse((config) => {
+    console.log(config)
+  })
+  // Error log
+  $axios.onError((e) => {
+    console.log(e.response)
+  })
+}
+```
+
+### front/nuxt.config.js
+
+```
+...
+plugins: [
+  'plugins/axios' // add
+],
+
+modules:[
+  '@nuxtjs/axios' // add
+],
+...
+
+...
+axios: {
+  // サーバーサイドで行うリクエストに使用されるURL
+  // baseURL: process.env.API_URL
+  // クライアントサイドで行うリクエストに使用されるURL(デフォルト: baseURL)
+  // browserBaseURL: <URL>
+},
+```
+
+### front/pages/users/_id.vue
+
+```bash
+$ mkdir front/pages/users
+$ touch front/pages/users/_id.vue
+```
+
+```javascript
+<template>
+  <h1>Hello, {{ name }}</h1>
+</template>
+
+<script>
+export default {
+  asyncData({ $axios, params }) {
+    return $axios.$get(`http://localhost:3000/users/${params.id}`)
+      .then((res) => {
+        return { name: res.name }
+      })
+  }
+}
+</script>
+```
+
+### 6-3. Set CROS counterplan on Rails
+
+### back/Gemfile
+
+```ruby
+# Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
+gem 'rack-cors'
+```
+
+### back/config/initializers/cors.rb
+
+```ruby
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins ENV["API_DOMAIN"] || ""
+
+    resource '*',
+      headers: :any,
+      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+  end
+end
+```
+
+```bash
+# Rebuilding api directory for update Gemfile
+$ docker-compose build back
+
+# check
+$ docker-compose run --rm back bundle info rack-cors
+```
+
