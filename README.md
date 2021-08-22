@@ -69,6 +69,7 @@ CMD ["rails", "server", "-b", "0.0.0.0"]
 ```
 
 ### .env
+
 ```
 # Set Environment Variable
 WORKDIR=app
@@ -81,6 +82,7 @@ POSTGRES_PASSWORD=password
 ```
 
 ### .gitignore
+
 ```
 /.env
 ```
@@ -88,7 +90,6 @@ POSTGRES_PASSWORD=password
 ### docker-compose.yml
 
 ```yml
-
 version: '3.8'
 
 services:
@@ -136,4 +137,97 @@ Launch the Docker app. Create Docker image.
 ```bash
 $ docker-compose build
 $ docker images
+```
+
+## 3. Create Rails App
+Create new Rails App in api mode.
+
+### 3-1. Create new Rails App
+
+```
+$ docker-compose run --rm back rails new . -f -B -d postgresql --api
+
+# Rebuilding api directory for update Gemfile
+$ docker-compose build back
+```
+
+### 3-2. Set Rails DB
+
+```
+$ vi back/config/database.yml
+```
+
+### back/config/database.yml
+
+```yml
+default: &default
+   adapter: postgresql
+   encoding: unicode
+   host: db # add
+   username: postgres # add
+   password: <%= ENV["POSTGRES_PASSWORD"] %> # add
+    ...
+```
+
+## 3-3. Create Rail DB
+
+```
+$ docker-compose run --rm back rails db:create
+```
+
+### Check Rails App
+
+```
+# start Rails
+$ docker-compose up back
+
+# access this url
+http://localhost:3000
+
+# stop Rails
+control + c
+$ docker-compose ps
+
+# delete container
+$ docker-compose rm -f
+$ docker-compose ps
+
+# or this command
+$ docker-compose down
+$ docker-compose ps
+
+-> not found
+```
+
+### Set DB passcode
+
+```bash
+$ docker-compose up -d db
+$ docker-compose exec -u username db psql
+```
+
+```bash
+postgres=# ALTER USER username WITH PASSWORD 'new passcode';
+
+# check
+postgres=# SELECT * FROM pg_shadow;
+
+# quit
+postgres=# \q
+```
+
+```bash
+$ docker-compose down
+```
+
+### back/config/database.yml
+
+```yml
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: db
+  username: postgres
+  password: new passcode # replace
+  ...
 ```
