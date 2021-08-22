@@ -16,7 +16,7 @@ $ touch {Dockerfile,Gemfile,Gemfile.lock}
 ### front/Dockerfile
 Alpine Linux is Linux distributions
 
-```docker
+```dockerfile
 FROM node:16.7.0-alpine
 
 ARG WORKDIR
@@ -38,7 +38,7 @@ EXPOSE ${CONTAINER_PORT}
 
 ### back/Dockerfile
 
-```docker
+```dockerfile
 FROM ruby:3.0.2-alpine
 
 ARG WORKDIR
