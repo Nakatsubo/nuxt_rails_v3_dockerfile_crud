@@ -231,3 +231,60 @@ default: &default
   password: new passcode # replace
   ...
 ```
+
+## 4. Create new Nuxt.js App
+Create new Nuxt.js App.
+
+```bash
+$ docker-compose run --rm front yarn create nuxt-app app
+```
+
+```bash
+create-nuxt-app v3.7.1
+✨  Generating Nuxt.js project in app
+? Project name: app
+? Programming language: JavaScript
+? Package manager: Yarn
+? UI framework: None
+? Nuxt.js modules: (Press <space> to select, <a> to toggle all, <i> to invert se
+lection)
+? Linting tools: (Press <space> to select, <a> to toggle all, <i> to invert sele
+ction)
+? Testing framework: None
+? Rendering mode: Single Page App
+? Deployment target: Server (Node.js hosting)
+? Development tools: (Press <space> to select, <a> to toggle all, <i> to invert
+selection)
+? What is your GitHub username?
+? Version control system: Git
+```
+
+```bash
+$ mv front/app/{*,.*} front
+$ rm -rf front/app
+```
+
+### Check Nuxt.js App
+
+```bash
+# start Nuxt
+$ docker-compose up front
+
+# access this url
+http://localhost:8080
+
+# stop Nuxt
+control + c
+$ docker-compose ps
+
+# delete container
+$ docker-compose stop
+$ docker-compose rm -f
+$ docker-compose ps
+
+# or this command
+$ docker-compose down
+$ docker-compose ps
+
+-> not found
+```
